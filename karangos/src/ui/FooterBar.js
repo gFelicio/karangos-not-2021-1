@@ -1,36 +1,38 @@
-import { Toolbar, Typography } from "@material-ui/core";
-import { makeStyles } from '@material-ui/core/styles';
+//import Toolbar from '@material-ui/core/Toolbar'
+import { Toolbar, Typography } from '@material-ui/core'
+import { makeStyles } from '@material-ui/core/styles'
+import LocalCafeTwoToneIcon from '@material-ui/icons/LocalCafeTwoTone'
 
 const useStyles = makeStyles((theme) => ({
-    footer: {
-        backgroundColor: theme.palette.background.paper,
-        minWidth: '100%',
-        position: 'fixed',
-        bottom: '0',
-        margin: '0',
-        padding: '0',
-    },
-    text: {
-        minWidth: '100%',
-        color: 'white'
-    },
-    link: {
-        textDecoration: 'none',
-        color: theme.palette.warning.light,
-        '&:hover': {
-            content: theme.palette.secondary.light
-        }
-    },    
+  text: {
+    //backgroundColor: 'yellow',
+    width: '100%',
+    color: theme.palette.text.secondary
+  },
+  toolbar: {
+    backgroundColor: theme.palette.background.paper,
+    minHeight: '42px',
+    // Posicionando a barra no rodapé da página
+    width: '100%',
+    position: 'fixed',
+    bottom: 0
+  },
+  link: {
+    color: theme.palette.secondary.light,
+    textDecoration: 'none',    // tira o sublinhado do link
+    '&:hover': {    // mouse passando sobre o link
+      textDecoration: 'underline' // retorna o sublinhado
+    }
+  }
 }));
 
-export function FooterBar () {
-    const classes = useStyles();
-
-    return (        
-        <Toolbar className={classes.footer}>
-            <Typography variant="caption" align="center" className={classes.text}>
-                Desenvolvido por <a href="https://github.com/gFelicio" className={classes.link}> Gustavo Felício </a>
-                </Typography>
-        </Toolbar>                
-    )
+export default function FooterBar() {
+  const classes = useStyles();
+  return (
+    <Toolbar className={classes.toolbar}>
+      <Typography variant="caption" align="center" className={classes.text}>
+        Desenvolvido com <LocalCafeTwoToneIcon fontSize="small" /> por <a href="https://github.com/gFelicio" className={classes.link}>Gustavo Felício</a>
+      </Typography>
+    </Toolbar>
+  )
 }

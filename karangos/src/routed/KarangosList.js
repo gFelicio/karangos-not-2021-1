@@ -70,7 +70,7 @@ export default function KarangosList() {
   async function deleteItem() {
     try {
       await axios.delete(`https://api.faustocintra.com.br/karangos/${deletable}`)
-      getData()   // Atualiza os dados da tabelas
+      getData()   // Atualiza os dados da tabela
       setSnackState({...snackState, open: true}) // Exibe a snackbar de sucesso    
     }
     catch(error) {
