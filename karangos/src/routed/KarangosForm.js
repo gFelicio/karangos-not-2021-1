@@ -12,7 +12,8 @@ import Button from '@material-ui/core/Button'
 import axios from 'axios'
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
-import { useHistory } from 'react-router-dom'
+import { useHistory, useParams } from 'react-router-dom'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 const useStyles = makeStyles(() => ({
     form: {
@@ -66,6 +67,7 @@ export default function KarangosForm() {
         placa: '',
         preco: 0
     })
+    const [dialogOpen, setDialogOpen] = useState(false) // O diálogo de confirmação está aberto?
     const [currentId, setCurrentId] = useState()
     const [importadoChecked, setImportadoChecked] = useState()
     const [snackState, setSnackState] = useState({
@@ -82,11 +84,40 @@ export default function KarangosForm() {
     })
 
     const [isModified, setIsModified] = useState(false)
+    
     const [btnSendState, setBtnSendState] = useState({
         disabled: false,
         label: 'Enviar'
     })
+
+    const [title, setTitle] = useState('Cadastrar Novo Karango')
+
     const history = useHistory()
+    const params = useParams()
+
+    useEffect(() => {
+        //verifica se tem o parametro ID na rota
+        // se sim, buscamos os dados desse item
+        // no back end para editar
+        if (params.id) {
+            setTitle('Editando Karango')
+            getData(params.id)
+        }
+    }, [])
+
+    async function getData (id) {
+        try {
+            let response = await axios.get(`https://api.faustocintra.com.br/karangos/${id}`)
+            setKarango(response.data)
+        } catch(error) {
+            setSnackState({
+                open: true,
+                severity: 'error',
+                message: 'Não foi possível carregar os dados para edição'
+            })
+        }
+    }
+
     function handleInputChange(event, property) {
         const karangoTemp = {...karango}
         let importadoCheckedTemp = importadoChecked
@@ -113,6 +144,7 @@ export default function KarangosForm() {
         
         setKarango(karangoTemp)
         setImportadoChecked(importadoCheckedTemp)
+        setIsModified(true)
         validate(karangoTemp)
     }
 
@@ -159,7 +191,12 @@ export default function KarangosForm() {
             try {
                 // Desabilitar o botão Enviar
                 setBtnSendState({disabled: true, label: 'Enviando...'})
-                await axios.post('https://api.faustocintra.com.br/karangos', karango)
+
+                // estou editando um registro
+                if (params.id)
+                    await axios.put(`https://api.faustocintra.com.br/karangos/${params.id}`, karango)                
+                else
+                    await axios.post('https://api.faustocintra.com.br/karangos', karango)
 
                 setSnackState({
                     open: true,
@@ -179,7 +216,7 @@ export default function KarangosForm() {
 
     function handleSubmit(event) {
         event.preventDefault() // Evita o recarregamento da página
-        saveData()
+        if (validate(karango)) saveData()
     }
 
     function Alert(props) {
@@ -193,8 +230,22 @@ export default function KarangosForm() {
         history.push('/list') // Retorna à página de listagem
     }
 
+    function handleDialogClose(result) {
+        setDialogOpen(false)    
+        // Se o usuário concordou com a exclusão 
+        if(result) history.push('/list')
+    }
+
+    function handleGoBack () {
+        if (isModified) setDialogOpen(true)
+        else history.push('/list')
+    }
+
     return (
         <>
+            <ConfirmDialog isOpen={dialogOpen} onClose={handleDialogClose}>
+                Há dados não salvos. Deseja realmente voltar?
+           </ConfirmDialog>
 
             <Snackbar open={snackState.open} autoHideDuration={6000} onClose={handleSnackClose}>
             <Alert onClose={handleSnackClose} severity={snackState.severity}>
@@ -202,7 +253,7 @@ export default function KarangosForm() {
             </Alert>
             </Snackbar>
 
-            <h1>Cadastrar Novo Karango</h1>
+            <h1>{title}</h1>
             <form className={classes.form} onSubmit={handleSubmit}>
 
                 <TextField id="marca"
@@ -256,10 +307,11 @@ export default function KarangosForm() {
                     id="ano_fabricacao"
                     label="Ano de Fabricacao"
                     variant="filled"
-                    value={karango.ano_fabricacao} onChange={event => handleInputChange(event, 'ano_fabricacao')}
+                    value={karango.ano_fabricacao}
+                    onChange={event => handleInputChange(event, 'ano_fabricacao')}
                     select
                     fullWidth>
-                    { years().map(year => <MenuItem value={year}>{year}</MenuItem>) }
+                    { years().map(year => <MenuItem value={year} key={year}>{year}</MenuItem>) }
                 </TextField>
 
                 <TextField
@@ -276,7 +328,7 @@ export default function KarangosForm() {
                     }}
                     required
                     error={error.preco !== ''}
-                    error={error.preco}/>
+                    helperText={error.preco}/>
                 <InputMask
                     formatChars={formatChars}
                     mask={placaMask}
@@ -300,10 +352,14 @@ export default function KarangosForm() {
                         disabled={btnSendState.disabled}>
                         {btnSendState.label}
                     </Button>
-                    <Button variant="contained">Voltar</Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleGoBack}>
+                        Voltar
+                    </Button>
                 </Toolbar>
 
-                <div>{JSON.stringify(karango)}<br />currentId: {currentId}</div>
+                {/* <div>{JSON.stringify(karango)}<br />currentId: {currentId}</div> */}
             </form>
         </>
     )
